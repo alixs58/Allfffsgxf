@@ -1,5 +1,23 @@
 require('dotenv').config();
 
+// ============================================================
+// EXPRESS WEB SERVER (إجباري لمنصة Render)
+// ============================================================
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 10000;
+
+app.get('/', (req, res) => {
+    res.send('Discord Bot is running successfully!');
+});
+
+app.listen(PORT, () => {
+    console.log(`🌐 Server is listening on port ${PORT}`);
+});
+
+// ============================================================
+// DISCORD & PROXY SETUP
+// ============================================================
 const {
     Client,
     GatewayIntentBits,
@@ -21,10 +39,6 @@ const {
 } = require('discord.js');
 
 const { ProxyAgent, setGlobalDispatcher } = require('undici');
-
-// ============================================================
-// CONFIG & PROXY SETUP
-// ============================================================
 
 const TOKEN = process.env.TOKEN;
 const PROXY_URL = process.env.PROXY_URL;
@@ -69,7 +83,7 @@ function createPanel() {
         ]);
 
     return new ContainerBuilder()
-        .setAccentColor(0x4285F4)
+        .setAccentColor(0xFFFFFF)
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent('**** فحص إيميلات Google (البحث عن الحسابات الفعالة) ****'))
         .addTextDisplayComponents(new TextDisplayBuilder().setContent('اختر الخيار المناسب من القائمة'))
@@ -113,7 +127,7 @@ function normalizeEmails(input) {
 }
 
 // ============================================================
-// GOOGLE CHECK ENGINE (التحقق من الحساب الفعال الذي يطلب كلمة مرور)
+// GOOGLE CHECK ENGINE
 // ============================================================
 
 async function checkGoogleAccountExists(email) {
@@ -141,14 +155,12 @@ async function checkGoogleAccountExists(email) {
             body: new URLSearchParams({ 'f.req': fReqData }).toString()
         });
 
-        // إذا حدث حظر من جوجل (Too Many Requests أو Forbidden)
         if (response.status === 429 || response.status === 403) {
             return { email: normalized, exists: false, status: 'error' };
         }
 
         const text = await response.text();
 
-        // 1. التحقق مما إذا كان الحساب غير موجود في جوجل
         const isNotFound = 
             text.includes("Couldn't find your Google Account") ||
             text.includes("INVALID_EMAIL") ||
@@ -160,7 +172,6 @@ async function checkGoogleAccountExists(email) {
             return { email: normalized, exists: false, status: 'not_found' };
         }
 
-        // 2. التحقق مما إذا كان الحساب فعالاً (موجود ويطلب كلمة مرور / خطوة الباسورد)
         const isFound = text.includes('["e",1]') || text.includes('INCOGNITO') || text.includes(normalized);
 
         if (isFound) {
@@ -204,7 +215,6 @@ async function processEmailCheck(emailsArray) {
                 errorEmails.push(email);
             }
 
-            // فاصل زمني 3 إلى 5 ثوانٍ لتجنب الصدمات السريعة
             const randomDelay = Math.floor(Math.random() * (5000 - 3000 + 1)) + 3000;
             await new Promise(r => setTimeout(r, randomDelay));
         }
