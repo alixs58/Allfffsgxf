@@ -1,0 +1,14 @@
+{
+  "name": "gmail-checker-bot",
+  "version": "1.0.0",
+  "description": "Discord bot for checking Gmails using Components V2",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^16.6.1",
+    "undici": "latest"
+  }
+}
